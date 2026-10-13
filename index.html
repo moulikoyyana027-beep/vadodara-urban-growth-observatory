@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Vadodara built-up surface and population dynamics using GHSL data.">
+<title>Vadodara Urban Growth Observatory</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --navy:#10253b;
+  --navy2:#173650;
+  --teal:#50d8bc;
+  --orange:#f5a35d;
+  --ink:#17314b;
+  --muted:#61768a;
+  --paper:#f1f4f6;
+  --line:#d7e0e7;
+  --white:#ffffff;
+}
+* {box-sizing:border-box}
+html {scroll-behavior:smooth;scroll-padding-top:125px}
+body {
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  color:#eaf3fb;
+  background:linear-gradient(135deg,#0b192a,#132d43 60%,#102139);
+  line-height:1.6;
+}
+.hero {
+  padding:38px clamp(20px,4vw,58px);
+  background:linear-gradient(115deg,#10253b,#173b4a 68%,#145448);
+  border-bottom:1px solid #304b60;
+}
+.eyebrow {
+  color:var(--teal);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+.hero h1 {
+  margin:8px 0;
+  font-size:clamp(28px,4vw,48px);
+  line-height:1.15;
+  letter-spacing:-1.3px;
+}
+.hero p {margin:12px 0 0;color:#c8d9e8;font-size:16px}
+nav {
+  position:sticky;top:0;z-index:50;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;padding:12px clamp(12px,2vw,24px);
+  background:rgba(10,24,39,.97);
+  border-bottom:1px solid #30495d;
+  backdrop-filter:blur(10px);
+}
+nav a {
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:55px;padding:10px;
+  background:#24435d;border:1px solid transparent;
+  border-radius:9px;color:#edf5fb;text-decoration:none;
+  font-size:14px;font-weight:700;transition:.2s;
+}
+nav a:hover,nav a.active {
+  background:#28516a;color:var(--teal);border-color:#477687;
+}
+.nav-icon {font-size:24px;line-height:1}
+main {max-width:1600px;margin:auto;padding:24px clamp(14px,2.5vw,36px) 55px}
+section {margin-bottom:45px;scroll-margin-top:130px}
+section h2 {font-size:clamp(23px,3vw,32px);margin:0 0 7px;letter-spacing:-.6px}
+.lead {color:#bfd0df;margin:0 0 20px}
+.kicker {
+  display:inline-block;color:var(--teal);font-size:11px;
+  font-weight:800;letter-spacing:1.7px;margin-bottom:7px;
+}
+.panel {
+  padding:22px;background:rgba(24,47,67,.86);
+  border:1px solid #304b60;border-radius:15px;
+}
+.overview-grid {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:13px;margin:20px 0;
+}
+.metric-card {
+  position:relative;background:var(--paper);color:var(--ink);
+  border-radius:12px;padding:18px;border:1px solid var(--line);
+}
+.metric-icon {font-size:25px;color:#178b81}
+.metric-card p {font-size:12px;color:var(--muted);margin:7px 0}
+.metric-card strong {display:block;font-size:clamp(20px,2.5vw,30px);line-height:1.3}
+.metric-card small {color:var(--muted)}
+.info-grid {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px
+}
+.info-item {padding:14px;background:#e7edf1;color:var(--ink);border-radius:9px}
+.info-item span {display:block;font-size:11px;color:var(--muted)}
+.info-item strong {font-size:14px}
+.study-layout {
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);
+  gap:20px;align-items:center
+}
+.study-frame {
+  display:flex;justify-content:center;align-items:center;
+  min-height:340px;padding:12px;background:var(--paper);
+  border:1px solid var(--line);border-radius:13px
+}
+.study-image {width:100%;max-width:600px;aspect-ratio:1/1;object-fit:contain;border-radius:7px}
+.study-notes {padding:20px;background:#173650;border-radius:12px}
+.study-notes li {margin:9px 0;color:#d9e6ef}
+.grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px
+}
+.map-card {
+  min-width:0;background:var(--paper);color:var(--ink);
+  border:1px solid var(--line);border-radius:13px;padding:15px;
+  box-shadow:0 7px 20px rgba(0,0,0,.08)
+}
+.map-card h3 {margin:0 0 12px;font-size:15px;color:var(--ink)}
+.map-card img {
+  display:block;width:100%;height:350px;object-fit:contain;
+  object-position:center;background:#080b10;border-radius:7px
+}
+.projected {
+  font-size:10px;background:#fff0d8;color:#8a4d10;
+  padding:3px 6px;border-radius:5px;white-space:nowrap
+}
+.legend {
+  margin-top:12px;padding:12px;background:#e7edf1;color:#20384b;
+  border-radius:8px
+}
+.legend strong {font-size:12px}
+.legend-scale {
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;margin-top:9px
+}
+.legend-item {min-width:0;font-size:10px;overflow-wrap:anywhere;line-height:1.4}
+.legend-swatch {display:block;width:100%;height:12px;border-radius:3px;margin-bottom:5px;border:1px solid #d0d9e1}
+.legend-units {font-size:10px;color:#526879;margin:9px 0 0}
+.animation-panel {background:#e7edf1;padding:16px;border-radius:12px}
+.animation-image {display:block;width:100%;max-height:650px;object-fit:contain;border-radius:7px}
+.chart-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.chart-card {
+  padding:18px;background:#f1f4f6;color:var(--ink);
+  border:1px solid var(--line);border-radius:13px;min-width:0
+}
+.chart-card h3 {margin:0 0 12px;font-size:15px}
+.chart-wrap {height:330px;position:relative}
+.chart-note {font-size:11px;color:var(--muted);margin:12px 0 0}
+.table-wrap {overflow:auto;border-radius:10px;background:var(--paper);color:var(--ink)}
+table {border-collapse:collapse;width:100%;min-width:600px;font-size:12px}
+th,td {padding:11px 13px;border-bottom:1px solid #dce4ea;text-align:right;white-space:nowrap}
+th {background:#dfe9ef;color:#17314b;font-weight:700}
+th:first-child,td:first-child {text-align:left}
+tbody tr:nth-child(even) {background:#e9eff3}
+tbody tr:hover {background:#d9eeeb}
+.comparison-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.comparison-card {padding:20px;border-radius:12px;background:#173650;border:1px solid #36536a}
+.comparison-card h3 {margin-top:0;color:var(--teal)}
+.comparison-card p {color:#d3e0e9;font-size:13px}
+.workflow {
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:12px;align-items:stretch
+}
+.workflow-step {
+  position:relative;padding:18px 13px;border-radius:12px;
+  background:#e9f0f3;color:var(--ink);text-align:center
+}
+.workflow-step .step-icon {font-size:29px;display:block;margin-bottom:8px}
+.workflow-step strong {display:block;font-size:12px}
+.workflow-step p {font-size:11px;color:#526879;margin-bottom:0}
+.limitation {
+  margin-top:18px;padding:18px;border-left:4px solid var(--teal);
+  background:#173b3d;color:#d9e8ed;border-radius:0 9px 9px 0
+}
+.empty-state,.missing-image {
+  padding:20px;background:#e7edf1;color:#526879;border-radius:9px
+}
+.missing-image {display:flex;align-items:center;justify-content:center;min-height:200px}
+footer {
+  padding:28px clamp(20px,4vw,58px);background:#091725;
+  border-top:1px solid #30495d;color:#aebfce;font-size:12px
+}
+footer strong {color:#eaf3fb}
+@media(max-width:950px) {
+  .overview-grid,.info-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .study-layout {grid-template-columns:1fr}
+  .workflow {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px) {
+  nav {gap:5px;padding:8px}
+  nav a {min-height:48px;font-size:10px;gap:5px;padding:6px}
+  .nav-icon {font-size:19px}
+  .grid,.chart-grid,.comparison-grid {grid-template-columns:1fr}
+  .overview-grid,.info-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .map-card img {height:290px}
+  .chart-wrap {height:280px}
+  .workflow {grid-template-columns:1fr}
+  .panel {padding:14px}
+}
+
+/* Refined overview, icons and cards */
+:root {
+  --navy: #10243a;
+  --navy2: #173b55;
+  --teal: #20b7a4;
+  --orange: #ed9954;
+  --ink: #17314b;
+  --muted: #5c7185;
+  --paper: #f3f6f8;
+  --line: #d5e0e8;
+  --white: #ffffff;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.metric-card {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  min-height: 190px;
+  border-radius: 15px;
+  color: #17314b;
+  background: linear-gradient(145deg, #ffffff, #e6f1f3);
+  border: 1px solid #c8dce3;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.16);
+}
+
+.metric-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  font-size: 30px;
+  color: #087f78;
+  background: #d4f4ed;
+  margin-bottom: 8px;
+}
+
+.metric-card:nth-child(even) .metric-icon {
+  color: #a95820;
+  background: #ffead7;
+}
+
+.metric-card p {
+  font-size: 13px;
+  font-weight: 600;
+  color: #536d80;
+  margin: 3px 0 8px;
+}
+
+.metric-card strong {
+  display: block;
+  font-size: clamp(22px, 2.3vw, 31px);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  color: #102d49;
+}
+
+.metric-card small {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #62798a;
+}
+
+.info-item {
+  padding: 17px;
+  background: linear-gradient(135deg, #e4f3f2, #edf2f7);
+  border: 1px solid #d3e2e8;
+  border-radius: 12px;
+  color: #17314b;
+}
+
+.info-item strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.workflow-step {
+  border: 1px solid #d1e2e8;
+  box-shadow: 0 5px 14px rgba(0,0,0,.07);
+  transition: transform .2s ease;
+}
+
+.workflow-step:hover {
+  transform: translateY(-3px);
+}
+
+.workflow-step .step-icon {
+  font-size: 36px;
+  line-height: 1.3;
+}
+
+.interpretation-panel {
+  margin-top: 22px;
+  padding: 23px;
+  border-radius: 14px;
+  color: #17314b;
+  background: linear-gradient(120deg, #e1f6f0, #fff0df);
+  border: 1px solid #c9e2df;
+  border-left: 5px solid #20b7a4;
+}
+
+.interpretation-panel h3 {
+  margin: 0 0 12px;
+  color: #116d69;
+  font-size: 20px;
+}
+
+.interpretation-panel p {
+  margin: 8px 0;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.interpretation-panel strong {
+  color: #17314b;
+}
+
+@media (max-width: 950px) {
+  .overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .metric-card {
+    min-height: 155px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+<header class="hero">
+  <div class="eyebrow">Urban Informatics · Spatial Analytics</div>
+  <h1>Vadodara Urban Growth Observatory</h1>
+  <p>Built-up Surface and Population Dynamics | 2000–2020</p>
+</header>
+
+<nav aria-label="Main navigation">
+  <a class="active" href="#overview"><span class="nav-icon">⌂</span>Overview</a>
+  <a href="#study-area"><span class="nav-icon">📍</span>Study Area</a>
+  <a href="#built-maps"><span class="nav-icon">▦</span>Built-up Growth</a>
+  <a href="#population-maps"><span class="nav-icon">👥</span>Population Growth</a>
+  
+  <a href="#methods"><span class="nav-icon">⚙</span>Methodology</a>
+</nav>
+
+<main>
+
+<section id="overview">
+  <span class="kicker">PROJECT OVERVIEW</span>
+  <h2>Understanding Vadodara's urban change</h2>
+  <p class="lead">
+    Explore the spatial distribution and temporal dynamics of built-up
+    surface and population using the Global Human Settlement Layer (GHSL).
+  </p>
+
+  <div class="overview-grid">
+        <article class="metric-card">
+<span class="metric-icon">▦</span>
+<p>Built-up surface</p>
+          <strong>41.30</strong>
+          <small>km²</small>
+        </article>
+        
+        <article class="metric-card">
+<span class="metric-icon">👥</span>
+<p>Population</p>
+          <strong>2,142,567.26</strong>
+          <small>people</small>
+        </article>
+        
+        <article class="metric-card">
+<span class="metric-icon">📈</span>
+<p>Built-up growth</p>
+          <strong>0.63</strong>
+          <small>%</small>
+        </article>
+        
+        <article class="metric-card">
+<span class="metric-icon">🌇</span>
+<p>Population growth</p>
+          <strong>6.09</strong>
+          <small>%</small>
+        </article>
+        </div>
+
+  <div class="info-grid">
+    <div class="info-item"><span>Study area</span><strong>Vadodara, Gujarat, India</strong></div>
+    <div class="info-item"><span>Data source</span><strong>JRC Global Human Settlement Layer</strong></div>
+    <div class="info-item"><span>Nominal grid spacing</span><strong>100 m</strong></div>
+    <div class="info-item"><span>Epochs analysed</span><strong>2000–2030 · 5-year intervals</strong></div>
+  </div>
+
+  <div class="limitation">
+    <strong>Study objective.</strong> Compare changes in built-up surface
+    and population distribution to support evidence-based urban planning.
+    The 2030 GHSL epoch is projected/modelled, not an observed future
+    measurement. The main historical comparison covers 2000–2020.
+  </div>
+</section>
+
+<section id="study-area">
+  <span class="kicker">GEOGRAPHIC CONTEXT</span>
+  <h2>Study Area</h2>
+  <p class="lead">Vadodara study boundary and surrounding urban context.</p>
+  <div class="study-layout">
+    <div class="study-frame">
+    <img class="study-image" src="assets/Study_area.png.png"
+         alt="Vadodara study area and boundary">
+    </div>
+    <div class="study-notes">
+      <h3>Spatial scope</h3>
+      <ul>
+        <li>Study boundary used to clip and summarize GHSL data.</li>
+        <li>Built-up surface and population are evaluated on a common study area.</li>
+        <li>Consistent visualization scales help compare epochs.</li>
+        <li>Map interpretation should consider dataset resolution and definitions.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="built-maps">
+  <span class="kicker">SPATIAL DISTRIBUTION</span>
+  <h2>Built-up surface maps</h2>
+  <p class="lead">Explore the mapped built-up surface for each available GHSL epoch.</p>
+  <div class="grid">
+    <article class="map-card">
+      <h3>▦ Built-up surface · 2000 </h3>
+      <img loading="lazy" src="assets/built-up_surface_2000.png" alt="Vadodara built-up surface in 2000">
+      
+    <div class="legend">
+      <strong>Built-up surface</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–1,909</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>1,909–3,818</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>3,818–5,727</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>5,727–7,636</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>7,636–9,545</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: m² per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>▦ Built-up surface · 2005 </h3>
+      <img loading="lazy" src="assets/built-up_surface_2005.png" alt="Vadodara built-up surface in 2005">
+      
+    <div class="legend">
+      <strong>Built-up surface</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–1,909</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>1,909–3,818</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>3,818–5,727</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>5,727–7,636</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>7,636–9,545</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: m² per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>▦ Built-up surface · 2010 </h3>
+      <img loading="lazy" src="assets/built-up_surface_2010.png" alt="Vadodara built-up surface in 2010">
+      
+    <div class="legend">
+      <strong>Built-up surface</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–1,909</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>1,909–3,818</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>3,818–5,727</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>5,727–7,636</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>7,636–9,545</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: m² per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>▦ Built-up surface · 2015 </h3>
+      <img loading="lazy" src="assets/built-up_surface_2015.png" alt="Vadodara built-up surface in 2015">
+      
+    <div class="legend">
+      <strong>Built-up surface</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–1,909</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>1,909–3,818</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>3,818–5,727</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>5,727–7,636</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>7,636–9,545</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: m² per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>▦ Built-up surface · 2020 </h3>
+      <img loading="lazy" src="assets/built-up_surface_2020.png" alt="Vadodara built-up surface in 2020">
+      
+    <div class="legend">
+      <strong>Built-up surface</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–1,909</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>1,909–3,818</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>3,818–5,727</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>5,727–7,636</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>7,636–9,545</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: m² per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>▦ Built-up surface · 2025 </h3>
+      <img loading="lazy" src="assets/built-up_surface_2025.png" alt="Vadodara built-up surface in 2025">
+      
+    <div class="legend">
+      <strong>Built-up surface</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–1,909</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>1,909–3,818</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>3,818–5,727</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>5,727–7,636</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>7,636–9,545</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: m² per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>▦ Built-up surface · 2030 <span class="projected">Projected/modelled</span></h3>
+      <img loading="lazy" src="assets/built-up_surface_2030.png" alt="Vadodara built-up surface in 2030">
+      
+    <div class="legend">
+      <strong>Built-up surface</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–1,909</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>1,909–3,818</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>3,818–5,727</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>5,727–7,636</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>7,636–9,545</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: m² per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    </div>
+</section>
+
+<section id="population-maps">
+  <span class="kicker">SPATIAL DISTRIBUTION</span>
+  <h2>Population maps</h2>
+  <p class="lead">Explore population distribution across the selected epochs.</p>
+  <div class="grid">
+    <article class="map-card">
+      <h3>👥 Population · 2000 </h3>
+      <img loading="lazy" src="assets/population_2000.png" alt="Vadodara population in 2000">
+      
+    <div class="legend">
+      <strong>Population</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–160.49</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>160.49–320.98</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>320.98–481.47</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>481.47–641.96</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>641.96–802.46</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: people per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>👥 Population · 2005 </h3>
+      <img loading="lazy" src="assets/population_2005.png" alt="Vadodara population in 2005">
+      
+    <div class="legend">
+      <strong>Population</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–160.49</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>160.49–320.98</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>320.98–481.47</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>481.47–641.96</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>641.96–802.46</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: people per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>👥 Population · 2010 </h3>
+      <img loading="lazy" src="assets/population_2010.png" alt="Vadodara population in 2010">
+      
+    <div class="legend">
+      <strong>Population</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–160.49</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>160.49–320.98</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>320.98–481.47</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>481.47–641.96</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>641.96–802.46</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: people per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>👥 Population · 2015 </h3>
+      <img loading="lazy" src="assets/population_2015.png" alt="Vadodara population in 2015">
+      
+    <div class="legend">
+      <strong>Population</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–160.49</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>160.49–320.98</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>320.98–481.47</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>481.47–641.96</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>641.96–802.46</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: people per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>👥 Population · 2020 </h3>
+      <img loading="lazy" src="assets/population_2020.png" alt="Vadodara population in 2020">
+      
+    <div class="legend">
+      <strong>Population</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–160.49</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>160.49–320.98</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>320.98–481.47</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>481.47–641.96</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>641.96–802.46</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: people per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>👥 Population · 2025 </h3>
+      <img loading="lazy" src="assets/population_2025.png" alt="Vadodara population in 2025">
+      
+    <div class="legend">
+      <strong>Population</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–160.49</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>160.49–320.98</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>320.98–481.47</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>481.47–641.96</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>641.96–802.46</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: people per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    
+    <article class="map-card">
+      <h3>👥 Population · 2030 <span class="projected">Projected/modelled</span></h3>
+      <img loading="lazy" src="assets/population_2030.png" alt="Vadodara population in 2030">
+      
+    <div class="legend">
+      <strong>Population</strong>
+      <div class="legend-scale">
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffff"></span>
+          <span>0–160.49</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#ffffb2"></span>
+          <span>160.49–320.98</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fecc5c"></span>
+          <span>320.98–481.47</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#fd8d3c"></span>
+          <span>481.47–641.96</span>
+        </div>
+        
+        <div class="legend-item">
+          <span class="legend-swatch"
+            style="background:#bd0026"></span>
+          <span>641.96–802.46</span>
+        </div>
+        </div>
+      <p class="legend-units">Units: people per grid cell.
+      Common visualization scale across all selected epochs.</p>
+    </div>
+    
+    </article>
+    </div>
+</section>
+
+<section id="animation">
+  <span class="kicker">TEMPORAL VISUALIZATION</span>
+  <h2>Built-up surface animation</h2>
+  <p class="lead">View changes across the year-wise built-up surface frames.</p>
+  <div class="panel">
+    <div class="animation-panel"><img class="animation-image" src="assets/Vadodara_Builtup_Yearwise.gif" alt="Vadodara built-up surface animation"></div>
+    <p class="chart-note">
+      The animation shows mapped epochs. The 2030 epoch is projected/modelled.
+    </p>
+  </div>
+</section>
+
+<section id="trends">
+  <span class="kicker">TIME-SERIES ANALYSIS</span>
+  <h2>Trends and statistics</h2>
+  <p class="lead">
+    Interactive charts use the calculated yearly statistics, where available.
+  </p>
+  <div class="chart-grid">
+    <article class="chart-card">
+      <h3>Built-up surface over time</h3>
+      <div class="chart-wrap"><canvas id="builtChart"></canvas></div>
+      <p class="chart-note">Unit: km². Values come from the yearly statistics table.</p>
+    </article>
+    <article class="chart-card">
+      <h3>Population over time</h3>
+      <div class="chart-wrap"><canvas id="populationChart"></canvas></div>
+      <p class="chart-note">Unit: people. Values come from the yearly statistics table.</p>
+    </article>
+    <article class="chart-card">
+      <h3>Cumulative built-up growth</h3>
+      <div class="chart-wrap"><canvas id="builtGrowthChart"></canvas></div>
+      <p class="chart-note">Percentage growth relative to the selected baseline year.</p>
+    </article>
+    <article class="chart-card">
+      <h3>Cumulative population growth</h3>
+      <div class="chart-wrap"><canvas id="populationGrowthChart"></canvas></div>
+      <p class="chart-note">Percentage growth relative to the selected baseline year.</p>
+    </article>
+  </div>
+</section>
+
+<section id="statistics">
+  <span class="kicker">NUMERICAL SUMMARY</span>
+  <h2>Year-wise statistics</h2>
+  <p class="lead">
+    Values below are taken from the analysis DataFrame supplied to this
+    website-generation cell.
+  </p>
+  
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Year</th><th>Built-up Surface (km²)</th><th>Population (people)</th><th>Built-up Change (km²)</th><th>Population Change (people)</th><th>Built-up Growth (%)</th><th>Population Growth (%)</th></tr></thead>
+        <tbody><tr><td>2,000.00</td><td>30.92</td><td>1,558,845.81</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr><td>2,005.00</td><td>33.52</td><td>1,658,036.07</td><td>2.60</td><td>99,190.26</td><td>8.40</td><td>6.36</td></tr><tr><td>2,010.00</td><td>36.46</td><td>1,750,338.09</td><td>2.94</td><td>92,302.02</td><td>8.78</td><td>5.57</td></tr><tr><td>2,015.00</td><td>39.16</td><td>1,845,096.25</td><td>2.70</td><td>94,758.16</td><td>7.40</td><td>5.41</td></tr><tr><td>2,020.00</td><td>40.39</td><td>1,946,492.44</td><td>1.23</td><td>101,396.19</td><td>3.13</td><td>5.50</td></tr><tr><td>2,025.00</td><td>41.04</td><td>2,019,632.10</td><td>0.65</td><td>73,139.65</td><td>1.62</td><td>3.76</td></tr><tr><td>2,030.00</td><td>41.30</td><td>2,142,567.26</td><td>0.26</td><td>122,935.16</td><td>0.63</td><td>6.09</td></tr></tbody>
+      </table>
+    </div>
+    
+</section>
+
+<section id="methods">
+  <span class="kicker">REPRODUCIBILITY</span>
+  <h2>Methodology, sources and limitations</h2>
+  <div class="panel">
+    <h3>Analysis workflow</h3>
+    <div class="workflow">
+      <div class="workflow-step">
+        <span class="step-icon">🗺️</span>
+        <strong>1. Study boundary</strong>
+        <p>Prepare the Vadodara study area.</p>
+      </div>
+      <div class="workflow-step">
+        <span class="step-icon">🛰️</span>
+        <strong>2. GHSL datasets</strong>
+        <p>Load built-up surface and population layers.</p>
+      </div>
+      <div class="workflow-step">
+        <span class="step-icon">📊</span>
+        <strong>3. Zonal statistics</strong>
+        <p>Summarize pixel values within the boundary.</p>
+      </div>
+      <div class="workflow-step">
+        <span class="step-icon">📈</span>
+        <strong>4. Growth analysis</strong>
+        <p>Calculate absolute change and percentage growth.</p>
+      </div>
+      <div class="workflow-step">
+        <span class="step-icon">🌐</span>
+        <strong>5. Visualization</strong>
+        <p>Produce maps, charts and temporal comparisons.</p>
+      </div>
+    </div>
+
+    <div class="interpretation-panel" id="interpretation">
+      <h3>🔎 Interpretation of Results</h3>
+
+      <p>
+        <strong>Built-up surface:</strong> The yearly maps and time-series
+        chart show how the spatial distribution of built-up surface changes
+        across the selected GHSL epochs. Compare the numerical values and
+        percentage changes to identify the periods with the largest increase.
+      </p>
+
+      <p>
+        <strong>Population:</strong> The population maps and chart show how
+        the estimated population distribution changes across the study area.
+        Differences between years can help identify areas for further
+        investigation of service and infrastructure requirements.
+      </p>
+
+      <p>
+        <strong>Growth comparison:</strong> Compare built-up and population
+        percentage growth using the same baseline year. If built-up growth
+        exceeds population growth in the calculated results, this may
+        indicate a need to examine land consumption and development density.
+        It does not, by itself, prove a causal relationship.
+      </p>
+
+      <p>
+        <strong>Data limitation:</strong> The 2030 GHSL epoch is
+        projected/modelled. Treat it separately from historical observations.
+        Interpret all values according to the selected GHSL bands, units,
+        resolution and study boundary.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="limitation">
+    <strong>Data sources and limitations.</strong>
+    Global Human Settlement Layer (GHSL), European Commission Joint Research
+    Centre. Dataset products have specific definitions, units, spatial
+    resolutions and epoch characteristics. Pixel values and zonal summaries
+    should be interpreted according to the selected GHSL bands and metadata.
+    The 2030 epoch is projected/modelled and must not be described as a direct
+    observation of future conditions.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <strong>Vadodara Urban Growth Observatory</strong><br>
+  Urban Informatics · Spatial Analytics<br>
+  Study period: 2000–2020 historical comparison, with additional GHSL
+  epochs through 2030 where available.<br>
+  Data source: GHSL, European Commission Joint Research Centre.
+</footer>
+
+<script>
+const DATA = [{"Year": 2000.0, "Built-up Surface (km²)": 30.91759896470585, "Population (people)": 1558845.8129208728, "Built-up Change (km²)": null, "Population Change (people)": null, "Built-up Growth (%)": null, "Population Growth (%)": null}, {"Year": 2005.0, "Built-up Surface (km²)": 33.51569301176473, "Population (people)": 1658036.0735066775, "Built-up Change (km²)": 2.5980940470588827, "Population Change (people)": 99190.2605858047, "Built-up Growth (%)": 8.403285293999541, "Population Growth (%)": 6.363057831867791}, {"Year": 2010.0, "Built-up Surface (km²)": 36.4591225137255, "Population (people)": 1750338.094571718, "Built-up Change (km²)": 2.9434295019607646, "Population Change (people)": 92302.02106504049, "Built-up Growth (%)": 8.782242697256937, "Population Growth (%)": 5.566948906595592}, {"Year": 2015.0, "Built-up Surface (km²)": 39.158464301960805, "Population (people)": 1845096.2526142958, "Built-up Change (km²)": 2.6993417882353086, "Population Change (people)": 94758.1580425778, "Built-up Growth (%)": 7.403748642658936, "Population Growth (%)": 5.413705976945193}, {"Year": 2020.0, "Built-up Surface (km²)": 40.3858373490196, "Population (people)": 1946492.4439302268, "Built-up Change (km²)": 1.2273730470587978, "Population Change (people)": 101396.19131593104, "Built-up Growth (%)": 3.1343748253103376, "Population Growth (%)": 5.495441832493242}, {"Year": 2025.0, "Built-up Surface (km²)": 41.03948734509804, "Population (people)": 2019632.096334403, "Built-up Change (km²)": 0.6536499960784354, "Population Change (people)": 73139.65240417607, "Built-up Growth (%)": 1.6185129218183825, "Population Growth (%)": 3.7575102144500105}, {"Year": 2030.0, "Built-up Surface (km²)": 41.29664467058825, "Population (people)": 2142567.256620838, "Built-up Change (km²)": 0.257157325490212, "Population Change (people)": 122935.16028643493, "Built-up Growth (%)": 0.6266094976474568, "Population Growth (%)": 6.0870076539959905}];
+
+function findColumn(fragment) {
+  if (!DATA.length) return null;
+  return Object.keys(DATA[0]).find(k =>
+    k.toLowerCase().includes(fragment.toLowerCase())
+  ) || null;
+}
+
+function numericSeries(fragment) {
+  const col = findColumn(fragment);
+  if (!col) return {labels:[], values:[]};
+
+  const rows = DATA.filter(r =>
+    r.Year !== null && r[col] !== null &&
+    Number.isFinite(Number(r.Year)) &&
+    Number.isFinite(Number(r[col]))
+  );
+
+  return {
+    labels: rows.map(r => String(r.Year)),
+    values: rows.map(r => Number(r[col]))
+  };
+}
+
+function makeChart(id, fragment, label, color, unit) {
+  const series = numericSeries(fragment);
+  const canvas = document.getElementById(id);
+
+  if (!series.values.length) {
+    canvas.parentElement.innerHTML =
+      '<div class="empty-state">Calculated data for this chart is unavailable.</div>';
+    return;
+  }
+
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: series.labels,
+      datasets: [{
+        label: label,
+        data: series.values,
+        borderColor: color,
+        backgroundColor: color + '22',
+        borderWidth: 3,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        tension: 0.25,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {mode:'index', intersect:false},
+      plugins: {
+        legend: {display:true},
+        tooltip: {
+          callbacks: {
+            label: ctx => label + ': ' +
+              Number(ctx.parsed.y).toLocaleString(undefined,
+                {maximumFractionDigits:2}) + (unit ? ' ' + unit : '')
+          }
+        }
+      },
+      scales: {
+        x: {title:{display:true,text:'Year'},grid:{display:false}},
+        y: {beginAtZero:true,title:{display:true,text:unit || label}}
+      }
+    }
+  });
+}
+
+makeChart('builtChart', 'Built-up Surface (km²)',
+          'Built-up surface', '#19a99a', 'km²');
+makeChart('populationChart', 'Population (people)',
+          'Population', '#ef9850', 'people');
+makeChart('builtGrowthChart', 'Built-up Growth (%)',
+          'Built-up growth', '#19a99a', '%');
+makeChart('populationGrowthChart', 'Population Growth (%)',
+          'Population growth', '#ef9850', '%');
+
+// Highlight the current navigation section as the user scrolls.
+const navLinks = [...document.querySelectorAll('nav a')];
+const observedSections = navLinks
+  .map(a => document.querySelector(a.getAttribute('href')))
+  .filter(Boolean);
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(a =>
+        a.classList.toggle(
+          'active',
+          a.getAttribute('href') === '#' + entry.target.id
+        )
+      );
+    }
+  });
+}, {rootMargin:'-20% 0px -65% 0px', threshold:0});
+
+observedSections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
